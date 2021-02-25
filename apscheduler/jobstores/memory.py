@@ -24,7 +24,7 @@ class MemoryJobStore(BaseJobStore):
         now_timestamp = datetime_to_utc_timestamp(now)
         pending = []
         for job, timestamp in self._jobs:
-            if timestamp is None or timestamp > now_timestamp:
+            if job.current_state == 'RUNNING' or timestamp is None or timestamp > now_timestamp:
                 break
             pending.append(job)
 
