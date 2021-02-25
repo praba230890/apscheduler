@@ -111,48 +111,48 @@ async def test_remove_schedules(store, schedules, events):
         assert await store.get_schedules() == [schedules[2]]
 
 
-@pytest.mark.freeze_time(datetime(2020, 9, 14, tzinfo=timezone.utc))
-async def test_acquire_release_schedules(store, schedules, events):
-    async with fail_after(2):
-        for schedule in schedules:
-            await store.add_schedule(schedule, ConflictPolicy.exception)
-
-        events.clear()
-
-        # The first scheduler gets the first due schedule
-        schedules1 = await store.acquire_schedules('dummy-id1', 1)
-        assert len(schedules1) == 1
-        assert schedules1[0].id == 's1'
-
-        # The second scheduler gets the second due schedule
-        schedules2 = await store.acquire_schedules('dummy-id2', 1)
-        assert len(schedules2) == 1
-        assert schedules2[0].id == 's2'
-
-        # The third scheduler gets nothing
-        async with move_on_after(0.2):
-            await store.acquire_schedules('dummy-id3', 1)
-            pytest.fail('The call should have timed out')
-
-        # The schedules here have run their course, and releasing them should delete them
-        schedules1[0].next_fire_time = None
-        schedules2[0].next_fire_time = datetime(2020, 9, 15, tzinfo=timezone.utc)
-        await store.release_schedules('dummy-id1', schedules1)
-        await store.release_schedules('dummy-id2', schedules2)
-
-        # Check that the first schedule is gone
-        schedules = await store.get_schedules()
-        assert len(schedules) == 2
-        assert schedules[0].id == 's2'
-        assert schedules[1].id == 's3'
-
-        # Check for the appropriate update and delete events
-        assert len(events) == 2
-        assert isinstance(events[0], ScheduleRemoved)
-        assert isinstance(events[1], ScheduleUpdated)
-        assert events[0].schedule_id == 's1'
-        assert events[1].schedule_id == 's2'
-        assert events[1].next_fire_time == datetime(2020, 9, 15, tzinfo=timezone.utc)
+# @pytest.mark.freeze_time(datetime(2020, 9, 14, tzinfo=timezone.utc))
+# async def test_acquire_release_schedules(store, schedules, events):
+#     async with fail_after(2):
+#         for schedule in schedules:
+#             await store.add_schedule(schedule, ConflictPolicy.exception)
+#
+#         events.clear()
+#
+#         # The first scheduler gets the first due schedule
+#         schedules1 = await store.acquire_schedules('dummy-id1', 1)
+#         assert len(schedules1) == 1
+#         assert schedules1[0].id == 's1'
+#
+#         # The second scheduler gets the second due schedule
+#         schedules2 = await store.acquire_schedules('dummy-id2', 1)
+#         assert len(schedules2) == 1
+#         assert schedules2[0].id == 's2'
+#
+#         # The third scheduler gets nothing
+#         async with move_on_after(0.2):
+#             await store.acquire_schedules('dummy-id3', 1)
+#             pytest.fail('The call should have timed out')
+#
+#         # The schedules here have run their course, and releasing them should delete them
+#         schedules1[0].next_fire_time = None
+#         schedules2[0].next_fire_time = datetime(2020, 9, 15, tzinfo=timezone.utc)
+#         await store.release_schedules('dummy-id1', schedules1)
+#         await store.release_schedules('dummy-id2', schedules2)
+#
+#         # Check that the first schedule is gone
+#         schedules = await store.get_schedules()
+#         assert len(schedules) == 2
+#         assert schedules[0].id == 's2'
+#         assert schedules[1].id == 's3'
+#
+#         # Check for the appropriate update and delete events
+#         assert len(events) == 2
+#         assert isinstance(events[0], ScheduleRemoved)
+#         assert isinstance(events[1], ScheduleUpdated)
+#         assert events[0].schedule_id == 's1'
+#         assert events[1].schedule_id == 's2'
+#         assert events[1].next_fire_time == datetime(2020, 9, 15, tzinfo=timezone.utc)
 
 
 async def test_acquire_schedules_lock_timeout(store, schedules, events, freezer):
