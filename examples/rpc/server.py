@@ -30,8 +30,8 @@ class SchedulerService(rpyc.Service):
     def exposed_pause_job(self, job_id, jobstore=None):
         return scheduler.pause_job(job_id, jobstore)
 
-    def exposed_resume_job(self, job_id, jobstore=None):
-        return scheduler.resume_job(job_id, jobstore)
+    def exposed_resume_job(self, job_id, jobstore=None, next_run_time=None):
+        return scheduler.resume_job(job_id, jobstore, next_run_time)
 
     def exposed_remove_job(self, job_id, jobstore=None):
         scheduler.remove_job(job_id, jobstore)

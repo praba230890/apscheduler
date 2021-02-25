@@ -46,6 +46,7 @@ class Job(object):
         super(Job, self).__init__()
         self._scheduler = scheduler
         self._jobstore_alias = None
+        self.current_state = 'PENDING'
         self._modify(id=id or uuid4().hex, **kwargs)
 
     def modify(self, **changes):
@@ -86,7 +87,7 @@ class Job(object):
         self._scheduler.pause_job(self.id, self._jobstore_alias)
         return self
 
-    def resume(self):
+    def resume(self, next_run_time=None):
         """
         Resume the schedule of this job if previously paused.
 
@@ -95,7 +96,7 @@ class Job(object):
         :return Job: this job instance
 
         """
-        self._scheduler.resume_job(self.id, self._jobstore_alias)
+        self._scheduler.resume_job(self.id, self._jobstore_alias, next_run_time=next_run_time)
         return self
 
     def remove(self):

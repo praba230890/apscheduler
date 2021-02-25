@@ -526,7 +526,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         """
         return self.modify_job(job_id, jobstore, next_run_time=None)
 
-    def resume_job(self, job_id, jobstore=None):
+    def resume_job(self, job_id, jobstore=None, next_run_time=None):
         """
         Resumes the schedule of the given job, or removes the job if its schedule is finished.
 
@@ -539,7 +539,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         with self._jobstores_lock:
             job, jobstore = self._lookup_job(job_id, jobstore)
             now = datetime.now(self.timezone)
-            next_run_time = job.trigger.get_next_fire_time(None, now)
+            next_run_time = next_run_time or job.trigger.get_next_fire_time(None, now)
             if next_run_time:
                 return self.modify_job(job_id, jobstore, next_run_time=next_run_time)
             else:
@@ -978,9 +978,9 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
                         try:
                             executor.submit_job(job, run_times)
                         except MaxInstancesReachedError:
-                            self._logger.warning(
-                                'Execution of job "%s" skipped: maximum number of running '
-                                'instances reached (%d)', job, job.max_instances)
+                            # self._logger.warning(
+                            #     'Execution of job "%s" skipped: maximum number of running '
+                            #     'instances reached (%d)', job, job.max_instances)
                             event = JobSubmissionEvent(EVENT_JOB_MAX_INSTANCES, job.id,
                                                        jobstore_alias, run_times)
                             events.append(event)
