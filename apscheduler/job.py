@@ -40,7 +40,7 @@ class Job(object):
 
     __slots__ = ('_scheduler', '_jobstore_alias', 'id', 'trigger', 'executor', 'func', 'func_ref',
                  'args', 'kwargs', 'name', 'misfire_grace_time', 'coalesce', 'max_instances',
-                 'next_run_time', '__weakref__')
+                 'next_run_time', 'current_state', '__weakref__')
 
     def __init__(self, scheduler, id=None, **kwargs):
         super(Job, self).__init__()
@@ -224,6 +224,10 @@ class Job(object):
             value = changes.pop('next_run_time')
             approved['next_run_time'] = convert_to_datetime(value, self._scheduler.timezone,
                                                             'next_run_time')
+        
+        if 'current_state' in changes:
+            value = changes.pop('current_state')
+            approved['current_state'] = value
 
         if changes:
             raise AttributeError('The following are not modifiable attributes of Job: %s' %
@@ -260,7 +264,8 @@ class Job(object):
             'misfire_grace_time': self.misfire_grace_time,
             'coalesce': self.coalesce,
             'max_instances': self.max_instances,
-            'next_run_time': self.next_run_time
+            'next_run_time': self.next_run_time,
+            'current_state': self.current_state
         }
 
     def __setstate__(self, state):
@@ -280,6 +285,7 @@ class Job(object):
         self.coalesce = state['coalesce']
         self.max_instances = state['max_instances']
         self.next_run_time = state['next_run_time']
+        self.current_state = state['current_state']
 
     def __eq__(self, other):
         if isinstance(other, Job):
