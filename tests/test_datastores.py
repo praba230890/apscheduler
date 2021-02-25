@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from anyio import move_on_after
+from anyio import fail_after, move_on_after
 from apscheduler.abc import Job, Schedule
 from apscheduler.events import ScheduleAdded, ScheduleRemoved, ScheduleUpdated
 from apscheduler.policies import CoalescePolicy, ConflictPolicy
@@ -49,20 +49,21 @@ def jobs():
 
 
 async def test_add_schedules(store, schedules, events):
-    for schedule in schedules:
-        await store.add_schedule(schedule, ConflictPolicy.exception)
+    async with fail_after(2):
+        for schedule in schedules:
+            await store.add_schedule(schedule, ConflictPolicy.exception)
 
-    assert await store.get_schedules() == schedules
-    assert await store.get_schedules({'s1', 's2', 's3'}) == schedules
-    assert await store.get_schedules({'s1'}) == [schedules[0]]
-    assert await store.get_schedules({'s2'}) == [schedules[1]]
-    assert await store.get_schedules({'s3'}) == [schedules[2]]
+        assert await store.get_schedules() == schedules
+        assert await store.get_schedules({'s1', 's2', 's3'}) == schedules
+        assert await store.get_schedules({'s1'}) == [schedules[0]]
+        assert await store.get_schedules({'s2'}) == [schedules[1]]
+        assert await store.get_schedules({'s3'}) == [schedules[2]]
 
-    assert len(events) == 3
-    for event, schedule in zip(events, schedules):
-        assert isinstance(event, ScheduleAdded)
-        assert event.schedule_id == schedule.id
-        assert event.next_fire_time == schedule.next_fire_time
+        assert len(events) == 3
+        for event, schedule in zip(events, schedules):
+            assert isinstance(event, ScheduleAdded)
+            assert event.schedule_id == schedule.id
+            assert event.next_fire_time == schedule.next_fire_time
 
 
 async def test_replace_schedules(store, schedules, events):
