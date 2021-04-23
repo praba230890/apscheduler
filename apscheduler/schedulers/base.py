@@ -375,7 +375,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
     def add_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
                 misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                 next_run_time=undefined, jobstore='default', executor='default',
-                replace_existing=False, **trigger_args):
+                replace_existing=False, current_state='PENDING', **trigger_args):
         """
         add_job(func, trigger=None, args=None, kwargs=None, id=None, \
             name=None, misfire_grace_time=undefined, coalesce=undefined, \
@@ -432,7 +432,8 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
             'misfire_grace_time': misfire_grace_time,
             'coalesce': coalesce,
             'max_instances': max_instances,
-            'next_run_time': next_run_time
+            'next_run_time': next_run_time,
+            'current_state': current_state
         }
         job_kwargs = dict((key, value) for key, value in six.iteritems(job_kwargs) if
                           value is not undefined)
@@ -451,8 +452,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
 
     def scheduled_job(self, trigger, args=None, kwargs=None, id=None, name=None,
                       misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
-                      next_run_time=undefined, jobstore='default', executor='default',
-                      **trigger_args):
+                      next_run_time=undefined, jobstore='default', executor='default',current_state='PENDING', **trigger_args):
         """
         scheduled_job(trigger, args=None, kwargs=None, id=None, \
             name=None, misfire_grace_time=undefined, \
@@ -469,7 +469,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         """
         def inner(func):
             self.add_job(func, trigger, args, kwargs, id, name, misfire_grace_time, coalesce,
-                         max_instances, next_run_time, jobstore, executor, True, **trigger_args)
+                         max_instances, next_run_time, jobstore, executor, True, current_state, **trigger_args)
             return func
         return inner
 
